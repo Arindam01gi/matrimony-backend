@@ -13,7 +13,7 @@ const startServer = () =>{
             console.log(`app running on PORT : ${PORT} successfully`)
         })
     }catch(err){
-        console.error('💥 Error starting server:', err);
+        console.error('Error starting server:', err);
         process.exit(1);
     }
 
