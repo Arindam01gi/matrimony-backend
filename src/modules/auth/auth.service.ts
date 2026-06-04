@@ -1,7 +1,3 @@
 import { prisma } from '../../config/prisma';
+import bycrypt from 'bcryptjs';
 
-// Write your core Auth database operations / business logic here
-export const fetchData = async () => {
-  // return await prisma.someModel.findMany();
-  return { message: 'Data found' };
-};
