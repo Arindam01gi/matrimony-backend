@@ -1,5 +1,5 @@
 import { Router,Request, Response,NextFunction } from 'express';
-import * as authController from './auth.controller';
+import { registerUser }  from './auth.controller';
 import { AnyZodObject } from 'zod';
 import { resgisterSchema } from './auth.validation';
 
@@ -22,6 +22,6 @@ const validator = (schema:AnyZodObject) =>(req:Request,res:Response,next:NextFun
 
 
 
-router.post('/register',validator(resgisterSchema))
+router.post('/register',validator(resgisterSchema),registerUser)
 
 export default router;

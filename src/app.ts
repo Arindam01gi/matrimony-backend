@@ -2,20 +2,19 @@ import express , { Application } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { success } from 'zod/v4';
+import authRoutes from './modules/auth/auth.routes';
+import { setupSwagger } from './config/swagger';
 
 
-const app:Application = express();
+const app= express();
 
 //Middleware
-app.use(cors({
-    'origin': process.env.FRONTEND_URL || 'http://localhost:3000',
-    'credentials' : true
-}))
-
+app.use(cors());
 
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(cookieParser())
+
 
 
 //Base route
@@ -23,6 +22,11 @@ app.use(cookieParser())
 app.get('/health',(req,res)=>{
     res.send("app is running successfully")
 })
+
+
+app.use('/api/auth',authRoutes)
+
+setupSwagger(app)
 
 
 //Global error handler placeholder
