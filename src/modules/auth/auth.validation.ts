@@ -22,3 +22,6 @@ export const phoneLoginSchema = z.object({
      password: z.string().min(6, `Password must be minimum 6 letters`),
   })
 })
+
+
+export const loginSchema = z.union([emailLoginSchema, phoneLoginSchema]);

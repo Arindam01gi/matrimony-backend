@@ -1,12 +1,12 @@
 import { Router,Request, Response,NextFunction } from 'express';
-import { registerUser }  from './auth.controller';
-import { AnyZodObject } from 'zod';
-import { resgisterSchema } from './auth.validation';
+import { loginUser, registerUser }  from './auth.controller';
+import { AnyZodObject, ZodEffects, ZodUnion } from 'zod';
+import { loginSchema, resgisterSchema } from './auth.validation';
 
 const router = Router();
 
 
-const validator = (schema:AnyZodObject) =>(req:Request,res:Response,next:NextFunction)=>{
+const validator = (schema: AnyZodObject | ZodEffects<any> | ZodUnion<any>) =>(req:Request,res:Response,next:NextFunction)=>{
   try{
      schema.parseAsync({
         body : req.body,
@@ -23,5 +23,6 @@ const validator = (schema:AnyZodObject) =>(req:Request,res:Response,next:NextFun
 
 
 router.post('/register',validator(resgisterSchema),registerUser)
+router.post('/login',validator(loginSchema),loginUser)
 
 export default router;
