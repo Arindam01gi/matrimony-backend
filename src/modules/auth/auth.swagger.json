@@ -79,6 +79,101 @@
           "401": { "description": "Invalid credentials" }
         }
       }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "summary": "Rotate expired session token using secure HTTP-Only cookie",
+        "description": "Exchanges a valid long-lived background `refreshToken` cookie for a new short-lived frontend `accessToken`. The browser sends this cookie automatically if configured correctly via credentials.",
+        "tags": ["Authentication"],
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "refreshToken",
+            "required": true,
+            "description": "The secure HttpOnly session validation string token automatically passed by the browser.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token rotated successfully. Access token renewed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Token rotated successfully" },
+                    "accessToken": { 
+                      "type": "string", 
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5NDM0NjYxNC1lMDQ1LTRmZDgtOGE0Yy0xZmY0ODQ0ZGZiZmUifQ..." 
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid", "example": "94346614-e045-4fd8-8a4c-1ff4844dfbfe" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh token missing from request cookie layout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Refresh token missing" }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refresh token is invalid, corrupted, or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Invalid or expired refresh token" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Log out the current user and clear session cookies",
+        "tags": ["Authentication"],
+        "responses": {
+          "200": {
+            "description": "Cookie successfully destroyed and session cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Logged out successfully" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
+    
   }
 }

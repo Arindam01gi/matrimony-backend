@@ -1,5 +1,5 @@
 import { Router,Request, Response,NextFunction } from 'express';
-import { loginUser, registerUser }  from './auth.controller';
+import { loginUser, logoutUser, refreshSession, registerUser }  from './auth.controller';
 import { AnyZodObject, ZodEffects, ZodUnion } from 'zod';
 import { loginSchema, resgisterSchema } from './auth.validation';
 
@@ -24,5 +24,7 @@ const validator = (schema: AnyZodObject | ZodEffects<any> | ZodUnion<any>) =>(re
 
 router.post('/register',validator(resgisterSchema),registerUser)
 router.post('/login',validator(loginSchema),loginUser)
+router.post('/refresh',refreshSession)
+router.post('/logout',logoutUser)
 
 export default router;

@@ -2,7 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import * as authService from './auth.service';
 import { sendAuthenticatedSession } from './auth.utils';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
+
+
+
+const RESFRESH_SECRET = process.env.RESFRESH_SECRET || ''
 
 
 
@@ -78,17 +83,61 @@ export const loginUser = async (req : Request , res: Response , next : NextFunct
             phone : user.phone
         }
 
-
         return sendAuthenticatedSession(
             res,200,userPayload, 'Login verified successfully'
         )
 
-
-
-
        }catch(error) {
         next(error)
        }
+}
 
+
+export const refreshSession = async (req : Request , res : Response, next : NextFunction) =>{
+
+    try{
+        const refreshToken = req.cookies.refreshToken;
+
+        if(!refreshToken){
+            return res.status(401).json({
+                success : false,
+                message : "Session unauthenticated."
+            })
+        }
+
+        jwt.verify(refreshToken, RESFRESH_SECRET , (err :any ,decoded : any )=>{
+            if(err) return res.status(403).json({ success: false, message: "Invalid or expired refresh token" });
+
+            const userPayload = decoded.userId;
+            return sendAuthenticatedSession(res,200,userPayload,"Refresh token generated successfuly")
+        })
+
+    }catch(err) {
+        next(err)
+    }
+
+}
+
+
+export const logoutUser = async (req:Request, res: Response, next: NextFunction) =>{
+
+    try{
+
+        res.clearCookie('refreshToken',{
+            httpOnly : true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/api/v1/auth/refresh',
+        })
+
+
+        return res.status(200).json({
+            success :true,
+            message: "Logged out successfully"
+        })
+
+    }catch(err){
+        next(err)
+    }
 
 }
