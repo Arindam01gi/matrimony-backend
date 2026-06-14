@@ -10,6 +10,12 @@ model User {
     updatedAt           DateTime    @default(now())
 
 
+
+    // Relational Link back to the UserProfile model
+    profile             UserProfile?
+    partnerPreference   PartnerPreference?
+
+
     @@index([email, phone])
 
 }

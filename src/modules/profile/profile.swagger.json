@@ -1,0 +1,277 @@
+{
+  "paths": {
+    "/api/v1/profile/me": {
+      "get": {
+        "tags": ["User Profile"],
+        "summary": "Fetch current authenticated user's profile and account context",
+        "description": "Retrieves the complete profile data row matching the authenticated token context. It utilizes a relational join query to pull parent account parameters (email, phone) automatically, allowing front-end views to accurately pre-load form layouts or manage app states.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active profile matching contextual token retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "profile": {
+                      "allOf": [
+                        { "$ref": "#/components/schemas/UserProfileResponse" },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "user": {
+                              "type": "object",
+                              "properties": {
+                                "email": { "type": "string", "format": "email", "example": "arindam@yopmail.com" },
+                                "phone": { "type": "string", "example": "9876543210" }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT session token is completely missing, expired, or malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Session expired or compromised. Please re-authenticate." }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Account credentials verified but profile table row is not initialized yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Profile not initialized yet." }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Physical connectivity breakdown with PostgreSQL service instance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "An unexpected internal database exception occurred" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/onboard/save": {
+      "post": {
+        "tags": ["User Profile"],
+        "summary": "Save or update onboarding profile progress dynamically",
+        "description": "A protected upsert endpoint designed for flexible multi-step onboarding wizard forms.\n\n### 🚨 MANDATORY FIELDS FOR INITIAL PROFILE CREATION (STEP 1):\nWhen creating a new profile entry for the first time, your JSON payload **must strictly contain** the following keys:\n1. `dateOfBirth` (ISO 8601 string)\n2. `gender` (`MALE` or `FEMALE` enum)\n3. `district` (String)\n4. `state` (String)\n5. `country` (String)\n6. `height` (Positive Number)\n7. `familyType` (`JOINT`, `NUCLEAR`, or `NOT_SPECIFIED` enum)\n8. `aboutMe` (Minimum 20 characters biography string)\n9. `maritalStatus` (`UNMARRIED`, `SEPARATED`, or `DIVORCED` enum)\n\n### 🔄 SUBSEQUENT SUBMISSIONS (STEP 2, STEP 3, OR LATER EDITS):\nFor any subsequent wizard page clicks or edits, you only need to submit the changing subset fields (e.g., `religion`, `occupation`, `interests`). Omitted fields will be completely left intact by the database upsert mechanism.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveProfileProgressInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Onboarding progress mapped and committed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Onboarding details saved successfully" },
+                    "profile": { "$ref": "#/components/schemas/UserProfileResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized context - JWT access token is missing, expired, or rejected by AuthenticatedSession middleware.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Session expired or compromised. Please re-authenticate." }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Validation layout or physical database constraints broken.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "An unexpected internal database exception occurred" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Input your valid login session JWT token inside the field below to unlock the secure AuthenticatedSession routing endpoints."
+      }
+    },
+    "schemas": {
+      "SaveProfileProgressInput": {
+        "type": "object",
+        "description": "Input model data payload keys. Mandatory fields for creating an initial profile row are explicitly tracked here.",
+        "required": [
+          "dateOfBirth",
+          "gender",
+          "district",
+          "state",
+          "country",
+          "height",
+          "familyType",
+          "aboutMe",
+          "maritalStatus"
+        ],
+        "properties": {
+          "dateOfBirth": { "type": "string", "format": "date-time", "description": "Mandatory on creation. ISO 8601 string format" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE"], "description": "Mandatory on creation." },
+          "district": { "type": "string", "description": "Mandatory on creation." },
+          "state": { "type": "string", "description": "MANDATORY. State region indicator." },
+          "country": { "type": "string", "description": "MANDATORY. Country location flag." },
+          "height": { "type": "number", "format": "float", "description": "Mandatory on creation. Height scaling metrics." },
+          "familyType": { "type": "string", "enum": ["JOINT", "NUCLEAR", "NOT_SPECIFIED"], "description": "Mandatory on creation." },
+          "aboutMe": { "type": "string", "description": "Mandatory on creation. Minimum 20 character biography introduction statement." },
+          "maritalStatus": { "type": "string", "enum": ["UNMARRIED", "SEPARATED", "DIVORCED"], "description": "Mandatory on creation." },
+          "workLocation": { "type": "string", "nullable": true },
+          "religion": { "type": "string", "enum": ["HINDU", "MUSLIM", "SIKH", "CHRISTIAN", "OTHERS"] },
+          "caste": { "type": "string", "nullable": true },
+          "motherTongue": { "type": "string", "default": "Bengali" },
+          "highestEducation": { "type": "string" },
+          "collegeUniversity": { "type": "string", "nullable": true },
+          "occupation": { "type": "string" },
+          "organization": { "type": "string", "nullable": true },
+          "annualIncome": { "type": "string", "enum": ["UNDER_3L", "THREE_TO_SIX_L", "SIX_TO_TEN_L", "TEN_TO_FIFTEEN_L", "ABOVE_FIFTEEN_L"] },
+          "familyValues": { "type": "string", "enum": ["ORTHODOX", "TRADITIONAL", "MODERATE", "LIBERAL"], "nullable": true },
+          "fathersOccupation": { "type": "string", "nullable": true },
+          "mothersOccupation": { "type": "string", "nullable": true },
+          "siblings": { "type": "integer", "minimum": 0 },
+          "siblingsMaritalStatus": { "type": "string", "enum": ["UNMARRIED", "SEPARATED", "DIVORCED"], "nullable": true },
+          "diet": { "type": "string", "enum": ["VEGETARIAN", "NON_VEGETARIAN", "EGGITARIAN", "VEGAN"], "nullable": true },
+          "smoking": { "type": "string", "enum": ["YES", "NO", "OCCASIONALLY"], "nullable": true },
+          "drinking": { "type": "string", "enum": ["YES", "NO", "OCCASIONALLY"], "nullable": true },
+          "interests": { "type": "array", "items": { "type": "string" } }
+        },
+        "example": {
+          "dateOfBirth": "1998-06-14T00:00:00.000Z",
+          "gender": "MALE",
+          "district": "Kolkata",
+          "state": "West Bengal",
+          "country": "India",
+          "height": 5.8,
+          "familyType": "NUCLEAR",
+          "aboutMe": "Software Engineer based in Kolkata, passionate about scalable backends and local football matches.",
+          "workLocation": "Salt Lake, Sector V",
+          "maritalStatus": "UNMARRIED",
+          "religion": "HINDU",
+          "caste": "Brahmin",
+          "motherTongue": "Bengali",
+          "highestEducation": "B.Tech in Computer Science",
+          "collegeUniversity": "Jadavpur University",
+          "occupation": "Software Engineer",
+          "organization": "Google",
+          "annualIncome": "TEN_TO_FIFTEEN_L",
+          "familyValues": "MODERATE",
+          "fathersOccupation": "Retired Govt Employee",
+          "mothersOccupation": "Homemaker",
+          "siblings": 1,
+          "siblingsMaritalStatus": "UNMARRIED",
+          "diet": "NON_VEGETARIAN",
+          "smoking": "NO",
+          "drinking": "OCCASIONALLY",
+          "interests": ["Coding", "Cricket", "Cooking"]
+        }
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "description": "User ID linking the 1-to-1 relationship" },
+          "dateOfBirth": { "type": "string", "format": "date-time" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE"] },
+          "district": { "type": "string" },
+          "state": { "type": "string" },
+          "country": { "type": "string" },
+          "height": { "type": "number", "format": "float" },
+          "familyType": { "type": "string", "enum": ["JOINT", "NUCLEAR", "NOT_SPECIFIED"] },
+          "aboutMe": { "type": "string" },
+          "workLocation": { "type": "string", "nullable": true },
+          "maritalStatus": { "type": "string", "enum": ["UNMARRIED", "SEPARATED", "DIVORCED"] },
+          "religion": { "type": "string", "enum": ["HINDU", "MUSLIM", "SIKH", "CHRISTIAN", "OTHERS"] },
+          "caste": { "type": "string", "nullable": true },
+          "motherTongue": { "type": "string" },
+          "highestEducation": { "type": "string" },
+          "collegeUniversity": { "type": "string", "nullable": true },
+          "occupation": { "type": "string" },
+          "organization": { "type": "string", "nullable": true },
+          "annualIncome": { "type": "string", "enum": ["UNDER_3L", "THREE_TO_SIX_L", "SIX_TO_TEN_L", "TEN_TO_FIFTEEN_L", "ABOVE_FIFTEEN_L"] },
+          "familyValues": { "type": "string", "enum": ["ORTHODOX", "TRADITIONAL", "MODERATE", "LIBERAL"], "nullable": true },
+          "fathersOccupation": { "type": "string", "nullable": true },
+          "mothersOccupation": { "type": "string", "nullable": true },
+          "siblings": { "type": "integer" },
+          "siblingsMaritalStatus": { "type": "string", "enum": ["UNMARRIED", "SEPARATED", "DIVORCED"], "nullable": true },
+          "diet": { "type": "string", "enum": ["VEGETARIAN", "NON_VEGETARIAN", "EGGITARIAN", "VEGAN"], "nullable": true },
+          "smoking": { "type": "string", "enum": ["YES", "NO", "OCCASIONALLY"], "nullable": true },
+          "drinking": { "type": "string", "enum": ["YES", "NO", "OCCASIONALLY"], "nullable": true },
+          "interests": { "type": "array", "items": { "type": "string" } },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

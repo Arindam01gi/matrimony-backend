@@ -1,0 +1,40 @@
+model PartnerPreference {
+  id                   String          @id @map("id")
+  user                 User            @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  // --- Demographic & Cultural Preferences ---
+  minAge               Int?            @map("min_age")
+  maxAge               Int?            @map("max_age")
+  minHeight            Float?          @map("min_height")
+  maxHeight            Float?          @map("max_height")
+  gender               Gender?
+  maritalStatus        MaritalStatus[] @map("marital_status")
+  religion             Religion[]
+  caste                String[]        // Array of acceptable castes
+  motherTongue         String[]        @map("mother_tongue")
+
+  // --- Background Preferences ---
+  highestEducation     String[]        @map("highest_education")
+  occupation           String[]
+  annualIncome         IncomeRange[]   @map("annual_income")
+  familyType           FamilyType[]    @map("family_type")
+  familyValues         FamilyValues[]  @map("family_values")
+
+  // --- Location Preferences ---
+  district             String[]
+  state                String[]
+  country              String[]
+
+  // --- Lifestyle Preferences ---
+  diet                 DietType[]
+  smoking              LifestyleHabit[]
+  drinking             LifestyleHabit[]
+
+  // Timestamps
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  // Performance Optimization Indexes for Core Match-Making Lookups
+  @@index([gender])
+  @@map("partner_preferences")
+}

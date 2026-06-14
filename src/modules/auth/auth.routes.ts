@@ -6,7 +6,7 @@ import { loginSchema, resgisterSchema } from './auth.validation';
 const router = Router();
 
 
-const validator = (schema: AnyZodObject | ZodEffects<any> | ZodUnion<any>) =>(req:Request,res:Response,next:NextFunction)=>{
+export const validator = (schema: AnyZodObject | ZodEffects<any> | ZodUnion<any>) =>(req:Request,res:Response,next:NextFunction)=>{
   try{
      schema.parseAsync({
         body : req.body,

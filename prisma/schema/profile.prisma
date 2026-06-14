@@ -1,0 +1,119 @@
+model UserProfile{
+
+    id                              String           @id @map("id")
+    user                            User             @relation(fields : [id], references : [id], onDelete : Cascade )
+
+    // -----------------BasicDetails--------
+    dateOfBirth                     DateTime         
+    gender                          Gender
+    district                        String
+    state                           String 
+    country                         String
+    height                          Float
+    familyType                      FamilyType
+    aboutMe                         String          @db.Text @map("about_me")
+    workLocation                    String?         @map("work_location")
+    maritalStatus                   MaritalStatus
+
+
+    // --- Demographic & Cultural Background ---
+    religion                        Religion
+    caste                           String?
+    motherTongue                    String          @default("Bengali") @map("mother_tongue")
+
+    // --- Professional & Academic Profiling ---
+    highestEducation               String         @map("highest_education")
+    collegeUniversity               String?
+    occupation                      String
+    organization                    String?
+
+
+    // --- Financial & Structural Variables ---
+    annualIncome                    IncomeRange      @map("annual_income")
+
+    // --- Family & Background Check Specs ---
+    familyValues                    FamilyValues?     @map("family_values")
+    fathersOccupation               String?           @map("fathers_occupation")
+    mothersOccupation               String?           @map("mothers_occupation")
+    siblings                        Int?
+    siblingsMaritalStatus          MaritalStatus
+
+
+    // --- Lifestyle Preferences ---
+    diet                            DietType?
+    smoking                         LifestyleHabit?
+    drinking                        LifestyleHabit?
+
+
+    // --- Flexible Array Storage (List) ---
+    interests         String[]
+
+    // Timestamps
+    createdAt         DateTime        @default(now())
+    updatedAt         DateTime        @updatedAt
+
+
+    // Performance Optimization Indexes for Onboarding Filters [cite: 24]
+    @@index([gender, religion, caste])
+    @@index([workLocation])
+    @@map("user_profiles")
+
+}
+
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+
+enum FamilyType {
+  JOINT
+  NUCLEAR
+  NOT_SPECIFIED
+}
+
+
+
+enum FamilyValues {
+  ORTHODOX
+  TRADITIONAL
+  MODERATE
+  LIBERAL
+}
+
+enum DietType {
+  VEGETARIAN
+  NON_VEGETARIAN
+  EGGITARIAN
+  VEGAN
+}
+
+enum LifestyleHabit {
+  YES
+  NO
+  OCCASIONALLY
+}
+
+enum Religion {
+    HINDU
+    MUSLIM
+    SIKH
+    CHRISTIAN
+    OTHERS
+}
+
+enum IncomeRange {
+  UNDER_3L
+  THREE_TO_SIX_L
+  SIX_TO_TEN_L
+  TEN_TO_FIFTEEN_L
+  ABOVE_FIFTEEN_L
+}
+
+
+enum MaritalStatus{
+    UNMARRIED
+    SEPARATED
+    DIVORCED
+}
