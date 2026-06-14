@@ -2,6 +2,7 @@ import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 import authSwagger from '../modules/auth/auth.swagger.json';
 import profileSwagger from '../modules/profile/profile.swagger.json';
+import preferenceSwagger from '../modules/preference/preference.swagger.json'
 
 const baseSwaggerDoc = {
   openapi: '3.0.0',
@@ -28,12 +29,14 @@ const baseSwaggerDoc = {
     // 🛠️ SAFE OPTIONAL CHAINING FIX HERE
     schemas: {
       ...(authSwagger as any).components?.schemas,
-      ...profileSwagger.components?.schemas // Works fine since profile.swagger.json has components defined
+      ...profileSwagger.components?.schemas,
+      ...(preferenceSwagger as any).components?.schemas
     }
   },
   paths: {
     ...authSwagger.paths,
     ...profileSwagger.paths,
+    ...preferenceSwagger.paths
   },
 };
 
